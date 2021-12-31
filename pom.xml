@@ -65,7 +65,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>cef-fx</groupId>
+			<groupId>at.bestsolution.cef</groupId>
 			<artifactId>cef-fx</artifactId>
 			<version>999.0.0-SNAPSHOT</version>
 			<classifier>${ceffx.platform}</classifier>
