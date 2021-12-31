@@ -39,3 +39,7 @@ Native CEF files located at /var/folders/hk/j16y787547735rl7f6tpnwp00000gn/T/cef
 [1231/180508.787855:INFO:CefUtil.cpp(66)] CEF initialized
 [1231/180508.787902:INFO:CefUtil.cpp(71)] running message loop...
 ```
+
+### Cleanup after forcefully killing
+
+In case you force fully killed the application it might be that the external process is still running search for the `cef-fx.native-standalone` binary and kill it
