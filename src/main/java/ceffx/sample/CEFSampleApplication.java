@@ -16,8 +16,8 @@ import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.Reflection;
 import javafx.scene.effect.SepiaTone;
@@ -40,19 +40,22 @@ public class CEFSampleApplication extends Application {
 	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		BorderPane pane = new BorderPane();
+		Label center = new Label("Initializing CEF ...");
+		center.setStyle("-fx-text-fill: white");
+		
+		BorderPane pane = new BorderPane(center);
 		pane.setStyle("-fx-background-color: black");
 		
 		cef = new ProcessCef();
 
 		CefMessageLoopManager messageLoopHandler = messageLoopHandlerFactory.createMessageLoopManager(cef);
-		messageLoopHandler.startMessageLoop().thenRunAsync( () -> {
-			// Hack wait a bit because it looks like streams are not yet setup
-			Timeline t = new Timeline(new KeyFrame(Duration.millis(10000), evt -> {
+		messageLoopHandler.startMessageLoop().thenRun( () -> {
+			// HACK wait a bit because it looks like streams are not yet setup
+			Timeline t = new Timeline(new KeyFrame(Duration.millis(5000), evt -> {
 				setupBrowser(pane);
 			}));
 			t.play();
-		}, Platform::runLater);
+		});
 		
 		Scene s = new Scene(pane, 800, 600);
 		primaryStage.setTitle("Java-8/FX-8 - Filament WebGL Parquet - https://google.github.io/filament/webgl/parquet.html");
