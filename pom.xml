@@ -9,7 +9,7 @@
 	<repositories>
 		<repository>
 			<id>cef-fx</id>
-			<url>http://nexus.ci.bestsolution.at:8081/repository/cef-fx-snapshots/</url>
+			<url>https://maven.bestsolution.at/repos/snapshots/</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>

@@ -5,6 +5,10 @@ import java.net.URL;
 
 import ceffx.Cef;
 import ceffx.javafx.BrowserView;
+import ceffx.javafx.DefaultCefMessageLoopManagerFactory;
+import ceffx.process.ProcessCef;
+import ceffx.util.CefMessageLoopManager;
+import ceffx.util.CefMessageLoopManagerFactory;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.ParallelTransition;
@@ -12,6 +16,7 @@ import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.Reflection;
@@ -28,30 +33,46 @@ public class CEFSampleApplication extends Application {
 	private boolean transformed;
 	
 	private int effectCount;
+
+	private final CefMessageLoopManagerFactory messageLoopHandlerFactory = new DefaultCefMessageLoopManagerFactory();
+	
+	private BrowserView view;
 	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		BorderPane pane = new BorderPane();
 		pane.setStyle("-fx-background-color: black");
 		
-		cef = new Cef();
-		cef.start();
-		
+		cef = new ProcessCef();
+
+		CefMessageLoopManager messageLoopHandler = messageLoopHandlerFactory.createMessageLoopManager(cef);
+		messageLoopHandler.startMessageLoop().thenRunAsync( () -> {
+			// Hack wait a bit because it looks like streams are not yet setup
+			Timeline t = new Timeline(new KeyFrame(Duration.millis(10000), evt -> {
+				setupBrowser(pane);
+			}));
+			t.play();
+		}, Platform::runLater);
 		
 		Scene s = new Scene(pane, 800, 600);
 		primaryStage.setTitle("Java-8/FX-8 - Filament WebGL Parquet - https://google.github.io/filament/webgl/parquet.html");
 		primaryStage.setScene(s);
 		primaryStage.show();
 		
-		Timeline t = new Timeline(new KeyFrame(Duration.millis(1000), evt -> {
-			setupBrowser(pane);
-		}));
-		t.play();
+		primaryStage.setOnCloseRequest( evt -> {
+			view.close();
+			try {
+				messageLoopHandler.stopMessageLoop();
+			} catch (Throwable e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	private void setupBrowser(BorderPane pane) {
 		try {
-			BrowserView view = new BrowserView(cef, new URL("https://google.github.io/filament/webgl/parquet.html"));
+			view = new BrowserView(cef, new URL("https://google.github.io/filament/webgl/parquet.html"));
 			pane.setCenter(view);
 			
 			pane.getScene().addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
@@ -59,13 +80,25 @@ public class CEFSampleApplication extends Application {
 					sampleTransform(view);
 				} else if( evt.getCode() == KeyCode.DIGIT2 ) {
 					applyEffect(view);
+				} else if( evt.getCode() == KeyCode.DIGIT3 ) {
+					sampleOpenVideoTweet(pane);
+					effectCount = 0;
 				}
 			});
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+	}
+	
+	private void sampleOpenVideoTweet(BorderPane pane) {
+		try {
+			view = new BrowserView(cef, new URL("https://twitter.com/tomsontom/status/1436832853187342339"));
+			pane.setCenter(view);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -119,12 +152,6 @@ public class CEFSampleApplication extends Application {
 		effectCount += 1;
 	}
 	
-	@Override
-	public void stop() throws Exception {
-		cef.shutdown();
-		super.stop();
-	}
-
 	public static void main(String[] args) {
 		launch(args);
 	}
